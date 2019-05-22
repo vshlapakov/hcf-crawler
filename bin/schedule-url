@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import hashlib
 
 import click
 from scrapinghub import ScrapinghubClient
@@ -7,24 +8,39 @@ from shub.config import get_target_conf
 
 @click.command()
 @click.argument('url')
+@click.option('--priority', '-p', type=int)
+@click.option('--arg', '-a', multiple=True,
+              help='additional arg (-a name=value) to pass with the url')
 @click.option('--target', default='default')
-@click.option('--frontier', default='default')
-@click.option('--slot')
-@click.option('--max-slots', default=8)
-def schedule(url, target, frontier, slot, max_slots):
+@click.option('--frontier', default='default', help='frontier name')
+@click.option('--slots', default=8, help='total number of slots')
+@click.option('-s', '--to-slot', help='push a request to specific slot')
+def schedule(url, priority, arg, target, frontier, slots, to_slot):
     targetconf = get_target_conf(target)
     client = ScrapinghubClient(auth=targetconf.apikey)
     project = client.get_project(targetconf.project_id)
-    frontier = project.frontiers.get(frontier)
-    slot = frontier.get(slot or get_slot(url))
-    slot.q.add([{'fp': url}])
-    slot.flush()
-    click.echo('Request is added successfully.')
+    frontier_obj = project.frontiers.get(frontier)
+    slot_obj = frontier_obj.get(to_slot or _get_slot(url, slots))
+    slot_obj.q.add([_format_request(url, priority, arg)])
+    slot_obj.flush()
+    slot_name = f'{slot_obj.key} (project={project.key},frontier={frontier})'
+    click.echo(f'Request is added successfully to slot {slot_name}.')
 
+def _get_slot(url, number_of_slots):
+    """ Determine to which slot should be saved the request."""
+    md5 = hashlib.md5()
+    md5.update(url.encode('utf8'))
+    digest = md5.hexdigest()
+    return str(int(digest, 16) % number_of_slots)
 
-def get_slot(url):
-    return 1  # FIXME
+def _format_request(url, priority, args):
+    request = {'fp': url}
+    if priority:
+        request['p'] = priority
+    if args:
+        request['qdata'] = dict(x.split('=', 1) for x in args)
+    return request
 
 
 if __name__ == '__main__':
-    schedule()
+    schedule()  # noqa
