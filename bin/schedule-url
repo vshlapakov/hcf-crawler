@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import click
+from scrapinghub import ScrapinghubClient
+from shub.config import get_target_conf
+
+
+@click.command()
+@click.argument('url')
+@click.option('--target', default='default')
+@click.option('--frontier', default='default')
+@click.option('--slot')
+@click.option('--max-slots', default=8)
+def schedule(url, target, frontier, slot, max_slots):
+    targetconf = get_target_conf(target)
+    client = ScrapinghubClient(auth=targetconf.apikey)
+    project = client.get_project(targetconf.project_id)
+    frontier = project.frontiers.get(frontier)
+    slot = frontier.get(slot or get_slot(url))
+    slot.q.add([{'fp': url}])
+    slot.flush()
+    click.echo('Request is added successfully.')
+
+
+def get_slot(url):
+    return 1  # FIXME
+
+
+if __name__ == '__main__':
+    schedule()

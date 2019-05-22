@@ -1,0 +1,3 @@
+stack: scrapy:1.6-py3
+requirements:
+  file: requirements-crawl.txt
