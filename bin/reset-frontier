@@ -11,7 +11,8 @@ from shub.config import get_target_conf
 @click.option('--target', default='default')
 @click.option('--frontier', default='default', help='frontier name')
 @click.option('--batch', '-b', multiple=True, help='batch ids to delete')
-def reset_frontier(slot, target, frontier, batch):
+@click.option('--list-batches', is_flag=True, help='print batches and exit')
+def reset_frontier(slot, target, frontier, batch, list_batches):
     targetconf = get_target_conf(target)
     project_id = targetconf.project_id
 
@@ -20,11 +21,18 @@ def reset_frontier(slot, target, frontier, batch):
     frontier_obj = project.frontiers.get(frontier)
     slot_obj = frontier_obj.get(slot)
     slot_name = f'{slot} (project={project_id},frontier={frontier})'
-    
-    if not batch:
+
+    if list_batches:
+        _list_batches(slot_obj)
+    elif not batch:
         _delete_slot(slot_obj, slot_name)
-        return
-    _delete_slot_batches(slot_obj, slot_name, ba)
+    else:
+        _delete_slot_batches(slot_obj, slot_name, ba)
+
+
+def _list_batches(slot):
+    batches = {batch['id']: len(batch['requests']) for batch in slot.q.list()}
+    click.echo('Batches & amount of requests in the slot:\n %s' % batches)
 
 
 def _delete_slot(slot, name):
