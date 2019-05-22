@@ -89,16 +89,19 @@ class HcfMiddleware:
         # ignore it while iterating and delete when all related requests are
         # processed
         if scheduled_batches:
-            self.frontier_slot.q.delete(scheduled_batches)
+            self._delete_processed_batches(scheduled_batches)
             self.logger.info(
                 'Scheduled %d request(s) from %d batch(es).',
                 scheduled_links, len(scheduled_batches)
             )
+
+    def _delete_processed_batches(self, batches):
+        self.frontier_slot.q.delete(batches)
 
     def create_request_from_hcf_data(self, url, data):
         """
         The simplest way to convert HCF entry to Scrapy request.
         The approach might be extended if needed by formatting a final url
         depending on the data or pass some data via meta parameter.
-        """"
+        """
         return Request(url=url)

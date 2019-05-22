@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import hashlib
+from urllib.parse import urlparse
 
 import click
 from scrapinghub import ScrapinghubClient
 from shub.config import get_target_conf
+from shub.exceptions import BadParameterException
 
 
 @click.command()
-@click.argument('url')
+@click.argument('url_or_file')
+@click.option('--from-file', is_flag=True)
 @click.option('--priority', '-p', type=int)
 @click.option('--arg', '-a', multiple=True,
               help='additional arg (-a name=value) to pass with the url')
@@ -15,16 +18,38 @@ from shub.config import get_target_conf
 @click.option('--frontier', default='default', help='frontier name')
 @click.option('--slots', default=8, help='total number of slots')
 @click.option('-s', '--to-slot', help='push a request to specific slot')
-def schedule(url, priority, arg, target, frontier, slots, to_slot):
+def schedule(url_or_file, from_file, priority, arg, target, frontier, slots, to_slot):
     targetconf = get_target_conf(target)
     client = ScrapinghubClient(auth=targetconf.apikey)
     project = client.get_project(targetconf.project_id)
     frontier_obj = project.frontiers.get(frontier)
-    slot_obj = frontier_obj.get(to_slot or _get_slot(url, slots))
-    slot_obj.q.add([_format_request(url, priority, arg)])
-    slot_obj.flush()
-    slot_name = f'{slot_obj.key} (project={project.key},frontier={frontier})'
-    click.echo(f'Request is added successfully to slot {slot_name}.')
+    click.echo(f'Adding request(s) to project={project.key},frontier={frontier}.')
+    slots_used = set()
+    for url in _get_urls(url_or_file, from_file):
+        slot_obj = frontier_obj.get(to_slot or _get_slot(url, slots))
+        slots_used.add(slot_obj)
+        slot_obj.q.add([_format_request(url, priority, arg)])
+        click.echo(f' Request {url} is added to slot {slot_obj.key}.')
+    for slot_obj in slots_used:
+        slot_obj.flush()
+    click.echo('All requests loaded to HCF.')
+
+def _get_urls(url_or_file, from_file):
+    if not from_file:
+        if not _is_valid_url(url_or_file):
+            raise BadParameterException('Please ensure the URL is correct.')
+        yield url_or_file
+        return
+    with open(url_or_file) as urls_file:
+        for url in urls_file:
+            yield url.strip()
+
+def _is_valid_url(url):
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc, result.path])
+    except:
+        return False
 
 def _get_slot(url, number_of_slots):
     """ Determine to which slot should be saved the request."""
