@@ -10,7 +10,6 @@ import logging
 
 from scrapy.exceptions import DontCloseSpider, NotConfigured
 from scrapinghub import ScrapinghubClient
-from scrapy.utils.request import request_fingerprint
 from w3lib.url import canonicalize_url
 
 
