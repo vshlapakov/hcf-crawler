@@ -47,7 +47,7 @@ ROBOTSTXT_OBEY = True
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
-    'hcf_crawler.middlewares.HcfMiddleware': 543,
+    'hcf_crawler.middlewares.HcfCrawlerMiddleware': 543,
 }
 
 # Enable or disable downloader middlewares
@@ -64,9 +64,9 @@ SPIDER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'hcf_crawler.pipelines.HcfCrawlerPipeline': 300,
-#}
+ITEM_PIPELINES = {
+    'hcf_crawler.pipelines.HcfCrawlerPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html

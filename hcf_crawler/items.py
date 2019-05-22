@@ -9,6 +9,6 @@ import scrapy
 
 
 class HcfCrawlerItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    url = scrapy.Field()
+    status = scrapy.Field()
+    response_size = scrapy.Field()

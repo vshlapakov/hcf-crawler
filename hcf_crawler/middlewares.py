@@ -16,7 +16,7 @@ from scrapinghub import ScrapinghubClient
 DEFAULT_BATCH_SIZE = 100
 
 
-class HcfMiddleware:
+class HcfCrawlerMiddleware:
 
     @classmethod
     def from_crawler(cls, crawler):
