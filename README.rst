@@ -61,15 +61,12 @@ Additional notes
   ``./bin/reset-frontier 1 --target 18255 --frontier viktor-test``
 
 There's a large space for improvements in the project, some ideas:
-
   - provide additional data along with URL (method, headers, body)
   
     first of all, you'll need to handle the additional params in `schedule-url` script and pass it as a part of `qdata`, then write a spider method `create_request_from_hcf_data(self, url, data)` to return a customized Request instance.
 
   - write a helper python script to get a crawled item from collection by url/fingerprint
-
   - write a helper script to run a SC job per each slot, read total amount of slots from Scrapy settings or another config file (make the default usage consistent for all scripts)
-
   - allow duplicate requests (with the same urls and parameters)
 
     you could use some unique request-base fingerprint as a HCF fingerprint instead of a plain URL, so HCF won't filter out similar requests 
