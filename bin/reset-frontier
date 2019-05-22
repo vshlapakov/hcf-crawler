@@ -36,7 +36,7 @@ def _delete_slot(slot, name):
 def _delete_slot_batches(slot, name, batches):
     batches_n = len(batches)
     if click.confirm(f'Delete {batches_n} batch(es) from slot {name}?'):
-        slot.q.delete()
+        slot.q.delete(batches)
         click.echo('The batches are deleted.')
 
 
