@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+import hashlib
+
+import click
+from scrapinghub import ScrapinghubClient
+from shub.config import get_target_conf
+
+
+@click.command()
+@click.argument('slot')
+@click.option('--target', default='default')
+@click.option('--frontier', default='default', help='frontier name')
+@click.option('--batch', '-b', multiple=True, help='batch ids to delete')
+def reset_frontier(slot, target, frontier, batch):
+    targetconf = get_target_conf(target)
+    project_id = targetconf.project_id
+
+    client = ScrapinghubClient(auth=targetconf.apikey)
+    project = client.get_project(project_id)
+    frontier_obj = project.frontiers.get(frontier)
+    slot_obj = frontier_obj.get(slot)
+    slot_name = f'{slot} (project={project_id},frontier={frontier})'
+    
+    if not batch:
+        _delete_slot(slot_obj, slot_name)
+        return
+    _delete_slot_batches(slot_obj, slot_name, ba)
+
+
+def _delete_slot(slot, name):
+    if click.confirm(f'Do you want to delete the whole slot {name}?'):
+        slot.delete()
+        click.echo('The slot is deleted.')
+
+
+def _delete_slot_batches(slot, name, batches):
+    batches_n = len(batches)
+    if click.confirm(f'Delete {batches_n} batch(es) from slot {name}?'):
+        slot.q.delete()
+        click.echo('The batches are deleted.')
+
+
+if __name__ == '__main__':
+    reset_frontier()  # noqa
